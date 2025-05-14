@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'NaviPrototype'
+rootProject.name = 'ConveniPj'
 
 dependencyResolutionManagement {
   versionCatalogs {

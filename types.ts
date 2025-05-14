@@ -1,39 +1,16 @@
-export type ServiceArea = {
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  description: string;
-};
+import { CategoryKey } from './utils/constants';
 
-export type Location = {
-  latitude: number;
-  longitude: number;
-};
-
-export type NearbyStore = {
+export interface NearbyStore {
   placeId: string;
   name: string;
   address: string;
   latitude: number;
   longitude: number;
-};
+}
 
-export type StoreWithDetails = NearbyStore & {
-  description: string;
+export interface StoreWithDetails extends NearbyStore {
+  description?: string;
   amenities?: string[];
   menu?: string[];
-  storeCode?: string; // ✅ 수정 (serviceAreaCode 아님)
-};
-
-export type UserPreferences = {
-  selectedAmenities: string[];
-  selectedMenus: string[];
-};
-
-export type StoreEvent = {
-  title: string;
-  description: string;
-  image?: string | null;
-  date: any;
-};
+  category: CategoryKey; // ✅ 카테고리 필드 추가 (convenience | drugstore | mart)
+}

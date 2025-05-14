@@ -1,137 +1,105 @@
-// screens/MapScreen.tsx
-
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Animated } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  ActivityIndicator,
+  Image,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import MapView from 'react-native-maps';
 
 import useNearbyStores from '../utils/useNearbyStores';
 import MapWithInputs from '../components/MapWithInputs';
-import PopupMessage from '../components/Popup';
-import { RootStackParamList } from '../App';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import CategorySelector from '../components/CategorySelector';
+import SettingButton from '../components/SettingButton';
+import DistanceSettingSheet from '../components/DistanceSettingSheet';
+import { CategoryKey } from '../utils/constants';
+import {
+  clearAllNotificationChannels,
+  getOrCreateChannel,
+} from '../utils/notificationChannelManager';
 
 export default function MapScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [radius, setRadius] = useState(1000);
+  const [selectedCategories, setSelectedCategories] = useState<CategoryKey[]>(['convenience']);
+  const [openNowOnly, setOpenNowOnly] = useState(false);
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
+  const [allowNotification, setAllowNotification] = useState(true);
+  const [allowSound, setAllowSound] = useState(true);
+  const [allowVibration, setAllowVibration] = useState(true);
+  const [channelId, setChannelId] = useState<string | null>(null);
   const mapRef = useRef<MapView>(null);
 
-  const {
-    stores,
-    popupText,
-    popupVisible,
-    highlight,
-    fetchStores,
-    eventPopupText,
-    eventPopupVisible,
-    selectedStore,
-    selectedEvent,
-  } = useNearbyStores(location?.latitude ?? 0, location?.longitude ?? 0, radius);
-
-  const popupOpacity = useRef(new Animated.Value(0)).current;
-  const popupTranslateY = useRef(new Animated.Value(50)).current;
-  const eventPopupOpacity = useRef(new Animated.Value(0)).current;
-  const eventPopupTranslateY = useRef(new Animated.Value(50)).current;
-
-  const showPopup = () => {
-    Animated.parallel([
-      Animated.timing(popupOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.timing(popupTranslateY, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start();
-  };
-
-  const hidePopupAnimated = () => {
-    Animated.parallel([
-      Animated.timing(popupOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-      Animated.timing(popupTranslateY, { toValue: 50, duration: 300, useNativeDriver: true }),
-    ]).start();
-  };
-
-  const showEventPopup = () => {
-    Animated.parallel([
-      Animated.timing(eventPopupOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.timing(eventPopupTranslateY, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start();
-  };
-
-  const hideEventPopupAnimated = () => {
-    Animated.parallel([
-      Animated.timing(eventPopupOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-      Animated.timing(eventPopupTranslateY, { toValue: 50, duration: 300, useNativeDriver: true }),
-    ]).start();
-  };
-
-  useEffect(() => {
-    if (popupVisible) showPopup();
-    else hidePopupAnimated();
-  }, [popupVisible]);
-
-  useEffect(() => {
-    if (eventPopupVisible) showEventPopup();
-    else hideEventPopupAnimated();
-  }, [eventPopupVisible]);
+  const { stores, fetchStores } = useNearbyStores(
+    location?.latitude ?? 0,
+    location?.longitude ?? 0,
+    radius,
+    selectedCategories,
+    openNowOnly,
+    allowNotification,
+    allowSound,
+    allowVibration,
+    channelId
+  );
 
   useEffect(() => {
     (async () => {
-      try {
-        const { status: notifStatus } = await Notifications.requestPermissionsAsync();
-        if (notifStatus !== 'granted') {
-          alert('通知の許可が必要です');
-          return;
-        }
-        const { status: locStatus } = await Location.requestForegroundPermissionsAsync();
-        if (locStatus !== 'granted') {
-          alert('位置情報の許可が必要です');
-          return;
-        }
-        const loc = await Location.getCurrentPositionAsync({});
-        setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-      } catch (error) {
-        console.error('位置情報取得エラー:', error);
-        alert('位置情報の取得に失敗しました');
+      const locStatus = await Location.requestForegroundPermissionsAsync();
+      if (locStatus.status !== 'granted') {
+        alert('位置情報の許可が必要です');
+        return;
       }
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
     })();
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      clearAllNotificationChannels();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'android' && allowNotification) {
+      (async () => {
+        const id = await getOrCreateChannel(allowSound, allowVibration);
+        setChannelId(id);
+      })();
+    }
+  }, [allowSound, allowVibration, allowNotification]);
 
   useEffect(() => {
     if (location) {
       fetchStores();
     }
-  }, [location, radius]);
+  }, [location, radius, selectedCategories, openNowOnly]);
 
-  // ✅ 편의점 팝업 클릭 핸들러
-  const handleStorePress = () => {
-    if (selectedStore) {
-      navigation.dispatch(
-        CommonActions.navigate({
-          name: 'StoreDetails',
-          params: {
-            storeCode: selectedStore.storeCode ?? '',
-            areaName: selectedStore.name,
-          },
-        })
-      );
-    }
-  };
+  const sendSilentTestNotification = async () => {
+    await Notifications.setNotificationChannelAsync('alert-silent', {
+      name: '무음 채널',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      sound: 'silent',
+      enableVibrate: false,
+    });
 
-  // ✅ 이벤트 팝업 클릭 핸들러
-  const handleEventPress = () => {
-    if (selectedEvent) {
-      navigation.dispatch(
-        CommonActions.navigate({
-          name: 'EventDetail',
-          params: {
-            title: selectedEvent.title,
-            description: selectedEvent.description,
-            image: selectedEvent.image ?? require('../assets/event1.jpg'),
-            date: selectedEvent.date ?? '',
-          },
-        })
-      );
-    }
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '무음 테스트',
+        body: '소리와 진동 없이 와야 정상입니다',
+        sound: 'silent',
+        android: {
+          channelId: 'alert-silent',
+        },
+      } as any,
+      trigger: null,
+    });
+    
   };
 
   if (!location) {
@@ -145,33 +113,55 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <MapWithInputs
-        location={location}
+      <View style={styles.adBanner}>
+        <Image source={require('../assets/banner.png')} style={styles.adImage} resizeMode="cover" />
+      </View>
+
+      <View style={styles.contentWrapper}>
+        <CategorySelector
+          selectedCategories={selectedCategories}
+          setSelectedCategories={setSelectedCategories}
+          openNowOnly={openNowOnly}
+          setOpenNowOnly={setOpenNowOnly}
+        />
+
+        <View style={styles.mapContainer}>
+          <MapWithInputs
+            location={location}
+            radius={radius}
+            setRadius={setRadius}
+            stores={stores}
+            mapRef={mapRef}
+          />
+        </View>
+      </View>
+
+      <SettingButton onPress={() => setIsSettingOpen(true)} />
+
+      <DistanceSettingSheet
+        isVisible={isSettingOpen}
+        onClose={() => {
+          setIsSettingOpen(false);
+          if (openNowOnly && location) {
+            fetchStores();
+          }
+        }}
         radius={radius}
         setRadius={setRadius}
-        stores={stores}
-        mapRef={mapRef}
+        allowNotification={allowNotification}
+        setAllowNotification={setAllowNotification}
+        allowSound={allowSound}
+        setAllowSound={setAllowSound}
+        allowVibration={allowVibration}
+        setAllowVibration={setAllowVibration}
       />
 
-      {popupVisible && (
-        <PopupMessage
-          text={popupText}
-          opacity={popupOpacity}
-          translateY={popupTranslateY}
-          type={highlight ? 'highlight' : 'normal'}
-          onPress={handleStorePress}
-        />
-      )}
-
-      {eventPopupVisible && (
-        <PopupMessage
-          text={eventPopupText}
-          opacity={eventPopupOpacity}
-          translateY={eventPopupTranslateY}
-          type="event"
-          onPress={handleEventPress}
-        />
-      )}
+      <TouchableOpacity
+        style={{ position: 'absolute', bottom: 120, right: 20, backgroundColor: 'black', padding: 10, borderRadius: 8 }}
+        onPress={sendSilentTestNotification}
+      >
+        <Text style={{ color: 'white' }}>🔔 테스트 알림</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -179,4 +169,18 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  adBanner: {
+    height: 60,
+    backgroundColor: '#ccc',
+  },
+  adImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contentWrapper: {
+    flex: 1,
+  },
+  mapContainer: {
+    flex: 1,
+  },
 });

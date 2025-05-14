@@ -1,4 +1,3 @@
-// app.config.js
 import 'dotenv/config';
 
 export default {
@@ -32,12 +31,27 @@ export default {
     web: {
       favicon: "./assets/favicon.png"
     },
+
+    /**
+     * 🔔 Expo Notifications 설정
+     * "silent" 라는 이름으로 사용할 무음 사운드를 등록합니다.
+     */
+    plugins: [
+      [
+        "expo-notifications",
+        {
+          sounds: [path.resolve(__dirname, 'assets/silent.wav')], // 🔊 'silent' 라는 이름으로 사용됨
+        }
+      ]
+    ],
+
     extra: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
       eas: {
         projectId: "b727836e-2249-4a35-9fa4-84b4dce8b9a5"
       }
     },
+
     owner: "enujuoy"
   }
-}
+};

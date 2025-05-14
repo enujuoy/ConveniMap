@@ -1,15 +1,29 @@
 import * as Notifications from 'expo-notifications';
+import { CategoryKey } from './constants';
 
-export const notifyNearbyStores = async (stores: any[]) => {
-  for (let i = 0; i < Math.min(stores.length, 3); i++) {
-    const store = stores[i];
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: `近くのコンビニ: ${store.name}`,
-        body: `住所: ${store.address}`,
-        sound: 'default',
-      },
-      trigger: null, // 즉시 발송
-    });
-  }
+const categoryLabels: Record<CategoryKey, string> = {
+  convenience: 'コンビニ',
+  drugstore: 'ドラッグストア',
+  mart: 'スーパー',
 };
+
+export async function notifyNearbyStore({
+  name,
+  address,
+  category,
+}: {
+  name: string;
+  address: string;
+  category: CategoryKey;
+}) {
+  const label = categoryLabels[category];
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: `[${label}] 近くに ${name} があります`,
+      body: `住所: ${address}`,
+      sound: 'default',
+    },
+    trigger: null,
+  });
+}

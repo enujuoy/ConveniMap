@@ -1,4 +1,4 @@
-package com.anonymous.NaviPrototype
+package com.anonymous.ConveniPj
 
 import android.os.Build
 import android.os.Bundle

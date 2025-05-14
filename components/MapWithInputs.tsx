@@ -1,18 +1,17 @@
-// components/MapWithInputs.tsx
-
-import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
-import MapView from 'react-native-maps';
-import Map from './Map';
+// ✅ MapWithInputs.tsx (거리 Picker 제거 후 전체 코드)
+import React, { useMemo } from 'react';
+import { View, StyleSheet } from 'react-native';
+import MapView, { Marker, Region } from 'react-native-maps';
 import { StoreWithDetails } from '../types';
+import { CategoryKey } from '../utils/constants';
 
-type MapWithInputsProps = {
+export interface MapWithInputsProps {
   location: { latitude: number; longitude: number };
   radius: number;
-  setRadius: (r: number) => void;
-  stores: StoreWithDetails[]; // ✅ StoreWithDetails로 수정
+  setRadius: React.Dispatch<React.SetStateAction<number>>;
+  stores: StoreWithDetails[];
   mapRef: React.RefObject<MapView>;
-};
+}
 
 export default function MapWithInputs({
   location,
@@ -21,42 +20,47 @@ export default function MapWithInputs({
   stores,
   mapRef,
 }: MapWithInputsProps) {
-  return (
-    <View style={{ flex: 1 }}>
-      <TextInput
-        style={styles.floatingInput}
-        keyboardType="numeric"
-        value={radius.toString()}
-        onChangeText={(text) => {
-          const num = parseInt(text);
-          if (!isNaN(num)) setRadius(num);
-        }}
-        placeholder="반경(m)"
-      />
+  const region: Region = useMemo(
+    () => ({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }),
+    [location]
+  );
 
-      <Map
-        myLat={location.latitude}
-        myLon={location.longitude}
-        serviceAreas={stores} // ✅ 그대로 넘겨도 OK
-        mapRef={mapRef}
-      />
+  const getColorForCategory = (category: CategoryKey) => {
+    switch (category) {
+      case 'convenience': return 'green';
+      case 'drugstore': return 'blue';
+      case 'mart': return 'orange';
+      default: return 'gray';
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFillObject}
+        region={region}
+        showsUserLocation
+      >
+        {stores.map((store, idx) => (
+          <Marker
+            key={`${store.name}_${store.latitude}_${store.longitude}`}
+            coordinate={{ latitude: store.latitude, longitude: store.longitude }}
+            title={store.name}
+            description={store.address}
+            pinColor={getColorForCategory(store.category)}
+          />
+        ))}
+      </MapView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  floatingInput: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    height: 36,
-    width: 100,
-    backgroundColor: '#ffffffcc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    fontSize: 13,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    zIndex: 999,
-  },
+  container: { flex: 1 },
 });

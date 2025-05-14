@@ -1,32 +1,21 @@
 // App.tsx
-import React from 'react';
+import 'react-native-get-random-values';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import BottomTab from './components/BottomTab';
-import CategorySettingScreen from './screens/CategorySettingScreen';
-import MapScreen from './screens/MapScreen';
-import StoreDetailsScreen from './screens/StoreDetailsScreen';
-import EventDetailScreen from './screens/EventDetailScreen';
 import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import { navigationRef } from './utils/navigationRef';
+
+import MapScreen from './screens/MapScreen';
 
 export type RootStackParamList = {
-  MainTabs: undefined;
-  CategorySetting: undefined;
   Map: undefined;
-  StoreDetails: {
-    storeCode: string;
-    areaName: string;
-  };
-  EventDetail: {
-    title: string;
-    description: string;
-    image?: string;
-    date?: any;
-  };
 };
 
-const RootStack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// ✅ 알림 처리 핸들러 설정 (필수)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -36,15 +25,40 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  useEffect(() => {
+    // ✅ 알림 권한 요청 및 토큰 확인
+    const registerForPush = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert('通知の許可が必要です');
+        return;
+      }
+
+      if (Device.isDevice) {
+        const token = await Notifications.getExpoPushTokenAsync();
+        console.log('Expo Push Token:', token.data);
+      } else {
+        console.warn('⚠️ シミュレーターでは通知は表示されません');
+      }
+    };
+
+    registerForPush();
+
+    // ✅ 알림 클릭 이벤트 수신
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      console.log('🔔 通知クリック:', data);
+      // 필요 시 navigationRef 사용해 화면 전환 가능
+    });
+
+    return () => subscription.remove();
+  }, []);
+
   return (
-    <NavigationContainer>
-      <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        <RootStack.Screen name="MainTabs" component={BottomTab} />
-        <RootStack.Screen name="CategorySetting" component={CategorySettingScreen} />
-        <RootStack.Screen name="Map" component={MapScreen} />
-        <RootStack.Screen name="StoreDetails" component={StoreDetailsScreen} />
-        <RootStack.Screen name="EventDetail" component={EventDetailScreen} />
-      </RootStack.Navigator>
+    <NavigationContainer ref={navigationRef}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Map" component={MapScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
