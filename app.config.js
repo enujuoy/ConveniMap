@@ -36,16 +36,13 @@ export default {
       'expo-localization',
       [
         'react-native-google-mobile-ads',
-        {
-          androidAppId: 'ca-app-pub-3128843138562956~2856950789',        }
+
       ]
     ],
     extra: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
-      eas: {
-        projectId: 'd7c229fd-dd89-4e5f-8e56-7ff4c3289f79',
-      },
+      
     },
-    owner: 'syjaa',
+
   }
 };

@@ -1,48 +1,69 @@
-# node modules
+# 기본
+.DS_Store
+Thumbs.db
 node_modules/
+.vscode/
+
+# 로그
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+expo-debug.log
 
 # Expo
 .expo/
 .expo-shared/
+.expo-packager/
+.expo-dev-client/
 
 # Android
-android/app/build/
 android/.gradle/
 android/.idea/
-*.keystore
+android/local.properties
+android/app/build/
+android/app/release/
+android/app/debug/
+android/app/src/debug/
+android/app/src/release/
+android/app/generated/
 
-# iOS
+# iOS (bare workflow or EAS builds)
 ios/build/
 ios/Pods/
-ios/.DS_Store
+ios/DerivedData/
+ios/Podfile.lock
 
-# Firebase (환경변수 등 민감정보)
+# 환경 변수
 .env
-.env.*.local
-firebase-debug.log
+.env.*
+.env.local
+.env.production
+.env.development
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Firebase / Google 관련 민감 키
+google-services.json
+GoogleService-Info.plist
+firebase.json
 
-# Mac
-.DS_Store
+# 테스트 및 커버리지
+coverage/
+jest/
 
-# VSCode
-.vscode/
-
-# Git
+# 이미지 캐시 등
 *.log
 *.lock
 *.tmp
-*.swp
-*.swo
 *.bak
 
-# EAS Build
-dist/
-build/
+# macOS / Windows 시스템 파일
+*.swp
+*.swo
+Desktop.ini
 
-.env
-.env.*
+# Android 서명키 및 보안 파일
+*.jks
+*.keystore
+
+# 기타
+*.iml
+.idea/
