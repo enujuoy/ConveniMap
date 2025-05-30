@@ -1,10 +1,10 @@
+// utils/useNearbyStores.ts
+
 import { useState, useRef } from 'react';
 import { getNearbyStores } from './getNearbyStores';
 import { StoreWithDetails } from '../types';
-import { categoryMap, CategoryKey } from './constants';
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
-import { scheduleChannelCleanup } from './notificationChannelManager';
+import { CategoryKey } from './constants';
+import { sendStoreNotification } from './sendStoreNotifications';
 
 export default function useNearbyStores(
   lat: number,
@@ -13,67 +13,37 @@ export default function useNearbyStores(
   selectedCategories: CategoryKey[],
   openNowOnly: boolean,
   allowNotification: boolean,
-  allowSound: boolean,
-  allowVibration: boolean,
-  channelId: string | null // ✅ 새 파라미터
+  onFoundClosestStore?: (closest: Partial<Record<CategoryKey, StoreWithDetails>>) => void
 ) {
   const [stores, setStores] = useState<StoreWithDetails[]>([]);
   const alreadyNotifiedCategory = useRef<Set<CategoryKey>>(new Set());
 
   const fetchStores = async () => {
-    if ((lat === 0 && lon === 0) || selectedCategories.length === 0) {
-      setStores([]);
-      return;
-    }
-
-    const results: StoreWithDetails[] = [];
-
-    for (const cat of selectedCategories) {
-      const label = categoryMap[cat];
-      const storesByCat = await getNearbyStores(lat, lon, radius, label, openNowOnly);
-
-      const detailed = storesByCat.map((s) => ({
-        ...s,
-        category: cat,
-        description: '',
-        amenities: [],
-        menu: [],
-      }));
-
-      results.push(...detailed);
-
-      if (
-        allowNotification &&
-        detailed.length > 0 &&
-        !alreadyNotifiedCategory.current.has(cat)
-      ) {
-        const closest = detailed[0];
-        alreadyNotifiedCategory.current.add(cat);
-
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: `[${label}] 近くに ${closest.name} があります`,
-            body: `住所: ${closest.address}`,
-            ...(Platform.OS === 'ios'
-              ? { sound: allowSound ? true : false }
-              : { sound: allowSound ? 'default' : 'silent' }),
-          },
-          trigger: null,
-          ...(Platform.OS === 'android' && channelId
-            ? { android: { channelId } }
-            : {}),
-        });
-      }
-    }
-
-    alreadyNotifiedCategory.current.forEach((cat) => {
-      if (!selectedCategories.includes(cat)) {
-        alreadyNotifiedCategory.current.delete(cat);
-      }
-    });
-
-    scheduleChannelCleanup(); // 채널 삭제 예약
+    const results = await getNearbyStores(lat, lon, radius, selectedCategories, openNowOnly);
     setStores(results);
+
+    const closestMap: Partial<Record<CategoryKey, StoreWithDetails>> = {};
+    for (const category of selectedCategories) {
+      const filtered = results.filter((s) => s.category === category);
+      if (filtered.length > 0) {
+        filtered.sort((a, b) => a.distance - b.distance);
+        closestMap[category] = filtered[0];
+      }
+    }
+
+    if (onFoundClosestStore) {
+      onFoundClosestStore(closestMap);
+    }
+
+    if (allowNotification) {
+      for (const [category, store] of Object.entries(closestMap)) {
+        const key = category as CategoryKey;
+        if (!alreadyNotifiedCategory.current.has(key)) {
+          alreadyNotifiedCategory.current.add(key);
+          sendStoreNotification(store!);
+        }
+      }
+    }
   };
 
   return { stores, fetchStores };

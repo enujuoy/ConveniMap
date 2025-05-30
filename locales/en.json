@@ -1,0 +1,37 @@
+{
+    "settings": {
+      "title": "Settings",
+      "notificationDistance": "Notification Distance",
+      "notificationAction": "Notification Action",
+      "language": "Language",
+      "allowPush": "Allow Push Notifications"
+    },
+    "appTitle": "CornershopMap",
+    "map": {
+      "myLocation": "My Location",
+      "loading": "Looking for a convenience store",
+      "loadingDone": "found a convenience store",
+      "route": "Route"
+    },
+    "common": {
+      "close": "Close"
+    },
+    "categories": {
+      "convenience": "Convenience Store",
+      "drugstore": "Drugstore",
+      "mart": "Supermarket",
+      "openNow": "Open Now"
+    },
+    "notifications": {
+      "permissionRequired": "Notification permission is required",
+      "simulatorNotSupported": "⚠️ Notifications are not shown in simulator",
+      "initError": "An error occurred while initializing i18n"
+    },
+    "push": {
+      "title": "Nearby Store",
+      "body": "{{storeName}} is nearby"
+    }
+    
+
+  }
+  

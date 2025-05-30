@@ -1,5 +1,17 @@
-import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+// components/DistanceSettingSheet.tsx
+
+import React, { useState, useEffect } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Switch,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '../i18n';
 
 type DistanceSettingSheetProps = {
   isVisible: boolean;
@@ -8,24 +20,31 @@ type DistanceSettingSheetProps = {
   setRadius: (radius: number) => void;
   allowNotification: boolean;
   setAllowNotification: (value: boolean) => void;
-  allowSound: boolean;
-  setAllowSound: (value: boolean) => void;
-  allowVibration: boolean;
-  setAllowVibration: (value: boolean) => void;
 };
 
-const DistanceSettingSheet = ({
+const LANGUAGES = [
+  { code: 'ko', label: '한국어' },
+  { code: 'ja', label: '日本語' },
+  { code: 'en', label: 'English' },
+];
+
+export default function DistanceSettingSheet({
   isVisible,
   onClose,
   radius,
   setRadius,
   allowNotification,
   setAllowNotification,
-  allowSound,
-  setAllowSound,
-  allowVibration,
-  setAllowVibration,
-}: DistanceSettingSheetProps) => {
+}: DistanceSettingSheetProps) {
+  const { t } = useTranslation();
+  const [currentLang, setCurrentLang] = useState(i18n.language);
+
+  useEffect(() => {
+    AsyncStorage.getItem('userLang').then((lang) => {
+      if (lang) setCurrentLang(lang);
+    });
+  }, []);
+
   const radiusOptions = [300, 500, 1000];
 
   const SettingSwitch = ({
@@ -43,54 +62,82 @@ const DistanceSettingSheet = ({
     </View>
   );
 
+  const changeLanguage = async (lang: string) => {    
+    await AsyncStorage.setItem('userLang', lang);
+    await AsyncStorage.setItem('hasUserSetLang', 'true');
+    await i18n.changeLanguage(lang);
+    setCurrentLang(lang);
+  };
+
   return (
     <Modal visible={isVisible} animationType="slide" transparent>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>通知設定</Text>
+          <Text style={styles.title}>{t('settings.title')}</Text>
 
-          <Text style={styles.sectionTitle}>通知距離</Text>
+          <Text style={styles.sectionTitle}>{t('settings.notificationDistance')}</Text>
           <View style={styles.buttonRow}>
             {radiusOptions.map((option) => (
               <TouchableOpacity
                 key={option}
-                style={[styles.optionButton, radius === option && styles.optionSelected]}
+                style={[
+                  styles.optionButton,
+                  radius === option && styles.optionSelected,
+                ]}
                 onPress={() => setRadius(option)}
               >
-                <Text style={radius === option ? styles.optionTextSelected : styles.optionText}>
+                <Text
+                  style={
+                    radius === option
+                      ? styles.optionTextSelected
+                      : styles.optionText
+                  }
+                >
                   {option}m
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>通知動作</Text>
+          <Text style={styles.sectionTitle}>{t('settings.notificationAction')}</Text>
           <SettingSwitch
-            label="プッシュ通知を許可"
+            label={t('settings.allowPush')}
             value={allowNotification}
             onChange={setAllowNotification}
           />
-          <SettingSwitch
-            label="通知音を鳴らす"
-            value={allowSound}
-            onChange={setAllowSound}
-          />
-          <SettingSwitch
-            label="バイブレーションを使用"
-            value={allowVibration}
-            onChange={setAllowVibration}
-          />
+
+          <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
+          <View style={styles.buttonRow}>
+            {LANGUAGES.map((lang) => (
+              <TouchableOpacity
+                key={lang.code}
+                style={[
+                  styles.optionButton,
+                  currentLang === lang.code && styles.optionSelected,
+                ]}
+                onPress={() => changeLanguage(lang.code)}
+              >
+                <Text
+                  style={
+                    currentLang === lang.code
+                      ? styles.optionTextSelected
+                      : styles.optionText
+                  }
+                >
+                  {lang.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>閉じる</Text>
+            <Text style={styles.closeButtonText}>{t('common.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>
     </Modal>
   );
-};
-
-export default DistanceSettingSheet;
+}
 
 const styles = StyleSheet.create({
   overlay: {

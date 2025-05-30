@@ -6,6 +6,7 @@ export interface NearbyStore {
   address: string;
   latitude: number;
   longitude: number;
+  distance: number; // ✅ 거리 정보 추가
 }
 
 export interface StoreWithDetails extends NearbyStore {

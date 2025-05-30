@@ -1,13 +1,16 @@
+// components/AdBanner.tsx
 import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 
 export default function AdBanner() {
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../assets/banner.png')} // ✅ 임시 배너 이미지 파일
-        style={styles.banner}
-        resizeMode="contain"
+      <BannerAd
+        unitId={TestIds.BANNER} // ✅ 테스트용 광고 ID (배포 시 실 ID로 교체)
+        size={BannerAdSize.ADAPTIVE_BANNER}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdFailedToLoad={(error) => console.warn('Ad failed to load:', error)}
       />
     </View>
   );
@@ -15,13 +18,8 @@ export default function AdBanner() {
 
 const styles = StyleSheet.create({
   container: {
-    height: 60,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  banner: {
-    width: '100%',
-    height: '100%',
   },
 });

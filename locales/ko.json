@@ -1,0 +1,37 @@
+{
+    "settings": {
+      "title": "설정",
+      "notificationDistance": "탐색 거리",
+      "notificationAction": "알림 동작",
+      "language": "언어 설정",
+      "allowPush": "푸시 알림 허용"
+    },
+    "appTitle": "편의점맵",
+    "map": {
+      "myLocation": "내 위치",
+      "loading": "편의점을 찾는중..",
+      "loadingDone": "편의점을 찾았습니다",
+      "route": "경로"
+    },
+    "common": {
+      "close": "닫기"
+    },
+    "categories": {
+      "convenience": "편의점",
+      "drugstore": "드럭스토어",
+      "mart": "마트",
+      "openNow": "영업 중"
+    },
+    "notifications": {
+      "permissionRequired": "알림 권한이 필요합니다",
+      "simulatorNotSupported": "⚠️ 시뮬레이터에서는 알림이 표시되지 않습니다",
+      "initError": "i18n 초기화 중 오류가 발생했습니다"
+    },
+    "push": {
+      "title": "근처 매장 안내",
+      "body": "{{storeName}}이(가) 근처에 있습니다"
+    }
+    
+
+  }
+  

@@ -1,0 +1,35 @@
+{
+    "settings": {
+      "title": "設定",
+      "notificationDistance": "探索距離",
+      "notificationAction": "通知動作",
+      "language": "言語設定",
+      "allowPush": "プッシュ通知を許可"
+    },
+    "appTitle": "コンビニマップ",
+    "map": {
+      "myLocation": "現在地",
+      "loading": "コンビニを探しています",
+      "loadingDone": "コンビニが見つかりました",
+      "route": "経路"
+    },
+    "common": {
+      "close": "閉じる"
+    },
+    "categories": {
+      "convenience": "コンビニ",
+      "drugstore": "ドラッグストア",
+      "mart": "スーパー",
+      "openNow": "営業中"
+    },
+    "notifications": {
+      "permissionRequired": "通知の許可が必要です",
+      "simulatorNotSupported": "⚠️ シミュレーターでは通知は表示されません",
+      "initError": "i18nの初期化中にエラーが発生しました"
+    },
+    "push": {
+      "title": "近くの店舗",
+      "body": "{{storeName}}が近くにあります"
+    }
+  }
+  

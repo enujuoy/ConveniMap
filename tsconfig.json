@@ -3,5 +3,6 @@
   "compilerOptions": {
     "strict": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "images.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "images.d.ts","types", "src", "App.tsx"]
+  
 }

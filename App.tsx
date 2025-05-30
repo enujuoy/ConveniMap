@@ -1,64 +1,29 @@
 // App.tsx
 import 'react-native-get-random-values';
-import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { navigationRef } from './utils/navigationRef';
-
-import MapScreen from './screens/MapScreen';
-
-export type RootStackParamList = {
-  Map: undefined;
-};
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
-// ✅ 알림 처리 핸들러 설정 (필수)
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+import React, { useEffect, useState } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
+import { initI18n } from './i18n';
+import AppContent from './AppContent';
 
 export default function App() {
-  useEffect(() => {
-    // ✅ 알림 권한 요청 및 토큰 확인
-    const registerForPush = async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        alert('通知の許可が必要です');
-        return;
-      }
+  const [appIsReady, setAppIsReady] = useState(false);
 
-      if (Device.isDevice) {
-        const token = await Notifications.getExpoPushTokenAsync();
-        console.log('Expo Push Token:', token.data);
-      } else {
-        console.warn('⚠️ シミュレーターでは通知は表示されません');
+  useEffect(() => {
+    const prepare = async () => {
+      try {
+        console.log('🟡 i18n 초기화 시작');
+        await SplashScreen.preventAutoHideAsync();
+        await initI18n();
+      } catch (e) {
+        console.warn('🚨 i18n 초기화 실패:', e);
+      } finally {
+        setAppIsReady(true);
       }
     };
-
-    registerForPush();
-
-    // ✅ 알림 클릭 이벤트 수신
-    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data;
-      console.log('🔔 通知クリック:', data);
-      // 필요 시 navigationRef 사용해 화면 전환 가능
-    });
-
-    return () => subscription.remove();
+    prepare();
   }, []);
 
-  return (
-    <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Map" component={MapScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  if (!appIsReady) return null;
+
+  return <AppContent />;
 }

@@ -2,56 +2,50 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "ConveniPj",
-    slug: "ConveniPj",
-    version: "1.0.0",
-    orientation: "portrait",
-    icon: "./assets/icon.png",
-    userInterfaceStyle: "light",
+    name: 'CornershopMap',
+    slug: 'ConveniPj',
+    version: '1.1.0',
+    orientation: 'portrait',
+    icon: './assets/icon.png',
     splash: {
-      image: "./assets/splash-icon.png",
-      resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      image: './assets/adaptive-icon.png',
+      resizeMode: 'contain',
+      backgroundColor: '#ffffff',
+    },
+    
+    ios: {
+      supportsTablet: true,
     },
     android: {
-      package: "com.anonymous.ConveniPj",
+      package: 'com.Devfox.ConveniPj',
+      versionCode: 2,
+      adaptiveIcon: {
+        foregroundImage: './assets/adaptive-icon.png',
+        backgroundColor: '#ffffff',
+      },
       config: {
         googleMaps: {
           apiKey: process.env.GOOGLE_MAPS_API_KEY
         }
       },
-      adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
-      }
-    },
-    ios: {
-      supportsTablet: true
     },
     web: {
-      favicon: "./assets/favicon.png"
+      favicon: './assets/favicon.png',
     },
-
-    /**
-     * 🔔 Expo Notifications 설정
-     * "silent" 라는 이름으로 사용할 무음 사운드를 등록합니다.
-     */
     plugins: [
+      'expo-localization',
       [
-        "expo-notifications",
+        'react-native-google-mobile-ads',
         {
-          sounds: [path.resolve(__dirname, 'assets/silent.wav')], // 🔊 'silent' 라는 이름으로 사용됨
-        }
+          androidAppId: 'ca-app-pub-3128843138562956~2856950789',        }
       ]
     ],
-
     extra: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
       eas: {
-        projectId: "b727836e-2249-4a35-9fa4-84b4dce8b9a5"
-      }
+        projectId: 'd7c229fd-dd89-4e5f-8e56-7ff4c3289f79',
+      },
     },
-
-    owner: "enujuoy"
+    owner: 'syjaa',
   }
 };
